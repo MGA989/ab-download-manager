@@ -33,6 +33,9 @@ import com.abdownloadmanager.desktop.utils.native_messaging.NativeMessagingManif
 import com.abdownloadmanager.desktop.utils.proxy.AutoConfigurableProxyProviderForDesktop
 import com.abdownloadmanager.desktop.utils.proxy.DesktopSystemProxySelectorProvider
 import com.abdownloadmanager.desktop.utils.proxy.ProxyCachingConfig
+import com.abdownloadmanager.integration.HLSDownloadCredentialsFromIntegration
+import com.abdownloadmanager.integration.HttpDownloadCredentialsFromIntegration
+import com.abdownloadmanager.integration.IDownloadCredentialsFromIntegration
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import ir.amirab.downloader.DownloadManagerMinimalControl
@@ -45,6 +48,7 @@ import ir.amirab.downloader.utils.IDiskStat
 import ir.amirab.util.startup.Startup
 import com.abdownloadmanager.integration.Integration
 import com.abdownloadmanager.shared.downloaderinui.DownloaderInUiRegistry
+import com.abdownloadmanager.shared.downloaderinui.hls.HLSDownloaderInUi
 import com.abdownloadmanager.shared.downloaderinui.http.HttpDownloaderInUi
 import com.abdownloadmanager.shared.storage.IExtraDownloadSettingsStorage
 import com.abdownloadmanager.shared.storage.IExtraQueueSettingsStorage
@@ -87,6 +91,7 @@ import ir.amirab.downloader.connection.proxy.ProxyStrategyProvider
 import ir.amirab.downloader.connection.proxy.SystemProxySelectorProvider
 import ir.amirab.downloader.downloaditem.DownloadJob
 import ir.amirab.downloader.downloaditem.IDownloadItem
+import ir.amirab.downloader.downloaditem.hls.HLSDownloader
 import ir.amirab.downloader.downloaditem.http.HttpDownloadItem
 import ir.amirab.downloader.downloaditem.http.HttpDownloader
 import ir.amirab.downloader.monitor.DownloadItemStateFactory
@@ -185,6 +190,12 @@ val downloaderModule = module {
         )
     }
     single {
+        HLSDownloader(inject())
+    }
+    single {
+        HLSDownloaderInUi(get(), get())
+    }
+    single {
         HttpDownloader(inject())
     }
     single {
@@ -193,11 +204,13 @@ val downloaderModule = module {
     single {
         DownloaderInUiRegistry().apply {
             add(get<HttpDownloaderInUi>())
+            add(get<HLSDownloaderInUi>())
         }
     }.bind<DownloadItemStateFactory<IDownloadItem, DownloadJob>>()
     single {
         DownloaderRegistry().apply {
             add(get<HttpDownloader>())
+            add(get<HLSDownloader>())
         }
     }
     single {
@@ -207,6 +220,9 @@ val downloaderModule = module {
             get(),
             get(),
             get(),
+            get<DownloadFoldersRegistry>().registerAndGet(
+                AppInfo.systemDir.resolve("downloadData")
+            )
         )
     }.bind(DownloadManagerMinimalControl::class)
     single<IDownloadMonitor> {
@@ -321,6 +337,20 @@ val jsonModule = module {
                         HttpDownloadItem.serializer()
                     }
                 }
+                // TODO remove this later
+                polymorphic(IDownloadCredentialsFromIntegration::class) {
+                    subclass(
+                        HttpDownloadCredentialsFromIntegration::class,
+                        HttpDownloadCredentialsFromIntegration.serializer()
+                    )
+                    subclass(
+                        HLSDownloadCredentialsFromIntegration::class,
+                        HLSDownloadCredentialsFromIntegration.serializer()
+                    )
+                    defaultDeserializer {
+                        HttpDownloadCredentialsFromIntegration.serializer()
+                    }
+                }
             }
         }
     }
@@ -330,7 +360,7 @@ val integrationModule = module {
         IntegrationHandlerImp()
     }
     single {
-        Integration(get(), get(), AppInfo.isInDebugMode())
+        Integration(get(), get(), get(), AppInfo.isInDebugMode())
     }
 }
 val updaterModule = module {

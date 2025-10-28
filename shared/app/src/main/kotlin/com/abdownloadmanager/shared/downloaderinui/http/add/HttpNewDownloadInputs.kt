@@ -14,6 +14,7 @@ import com.abdownloadmanager.shared.utils.convertPositiveSpeedToHumanReadable
 import com.abdownloadmanager.shared.utils.perhostsettings.PerHostSettingsItem
 import com.abdownloadmanager.shared.downloaderinui.http.applyToHttpDownload
 import ir.amirab.downloader.connection.response.HttpResponseInfo
+import ir.amirab.downloader.downloaditem.DownloadJobExtraConfig
 import ir.amirab.downloader.downloaditem.DownloadStatus
 import ir.amirab.downloader.downloaditem.IDownloadItem
 import ir.amirab.downloader.downloaditem.http.HttpDownloadCredentials
@@ -79,6 +80,8 @@ class HttpNewDownloadInputs(
             fileChecksum = fileChecksum?.toString()
         ).withCredentials(credentials)
     }
+
+    override val downloadJobConfig: StateFlow<DownloadJobExtraConfig?> = MutableStateFlow(null)
 
     override fun applyHostSettingsToExtraConfig(extraConfig: PerHostSettingsItem) {
         extraConfig.applyToHttpDownload(
@@ -160,6 +163,36 @@ class HttpNewDownloadInputs(
                 "".asStringSource()
             }
         ),
+        StringConfigurable(
+            Res.string.download_item_settings_user_agent.asStringSource(),
+            Res.string.download_item_settings_user_agent_description.asStringSource(),
+            backedBy = credentials.mapTwoWayStateFlow(
+                map = {
+                    it.userAgent.orEmpty()
+                },
+                unMap = {
+                    copy(userAgent = it.takeIf { it.isNotEmpty() })
+                }
+            ),
+            describe = {
+                "".asStringSource()
+            }
+        ),
+        StringConfigurable(
+            Res.string.download_item_settings_download_page.asStringSource(),
+            Res.string.download_item_settings_download_page_description.asStringSource(),
+            backedBy = credentials.mapTwoWayStateFlow(
+                map = {
+                    it.downloadPage.orEmpty()
+                },
+                unMap = {
+                    copy(downloadPage = it.takeIf { it.isNotEmpty() })
+                }
+            ),
+            describe = {
+                "".asStringSource()
+            }
+        )
     )
 
     override val lengthStringFlow: StateFlow<StringSource> = downloadUiChecker.responseInfo.mapStateFlow {

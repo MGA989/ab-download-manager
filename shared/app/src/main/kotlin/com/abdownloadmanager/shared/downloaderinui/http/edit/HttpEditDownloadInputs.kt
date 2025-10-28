@@ -18,6 +18,7 @@ import com.abdownloadmanager.shared.utils.convertPositiveSizeToHumanReadable
 import com.abdownloadmanager.shared.utils.convertPositiveSpeedToHumanReadable
 import ir.amirab.downloader.connection.HttpDownloaderClient
 import ir.amirab.downloader.connection.response.HttpResponseInfo
+import ir.amirab.downloader.downloaditem.DownloadJobExtraConfig
 import ir.amirab.downloader.downloaditem.http.HttpDownloadCredentials
 import ir.amirab.downloader.downloaditem.http.HttpDownloadItem
 import ir.amirab.util.compose.StringSource
@@ -141,6 +142,21 @@ class HttpEditDownloadInputs(
             }
         ),
         StringConfigurable(
+            Res.string.download_item_settings_user_agent.asStringSource(),
+            Res.string.download_item_settings_user_agent_description.asStringSource(),
+            backedBy = credentials.mapTwoWayStateFlow(
+                map = {
+                    it.userAgent.orEmpty()
+                },
+                unMap = {
+                    copy(userAgent = it.takeIf { it.isNotEmpty() })
+                }
+            ),
+            describe = {
+                "".asStringSource()
+            }
+        ),
+        StringConfigurable(
             Res.string.download_item_settings_download_page.asStringSource(),
             Res.string.download_item_settings_download_page_description.asStringSource(),
             backedBy = credentials.mapTwoWayStateFlow(
@@ -157,7 +173,7 @@ class HttpEditDownloadInputs(
         ),
     )
     val length = linkChecker.length
-
+    override val downloadJobConfig: MutableStateFlow<DownloadJobExtraConfig?> = MutableStateFlow(null)
 
     private fun HttpDownloadItem.applyOurChanges(edited: HttpDownloadItem) {
         // we don't change some of these properties, so I commented them

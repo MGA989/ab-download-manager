@@ -14,6 +14,44 @@
 
 ### Security
 
+## 1.7.1
+
+### Added
+
+- Support for custom data directory (#895)
+
+### Fixed
+
+- System shortcuts not working on the main page (#885)
+- Segment info display issues
+- Suggested file names from browsers are now automatically corrected before use (#896)
+
+### Improved
+
+- Translations updated
+- Download list UI improvements (#897)
+- Extra icon sizes added to the Windows `.ico` file
+
+## 1.7.0
+
+### Added
+
+- Support for downloading media files: audio, video, non encrypted HLS streams from the browser (browser extension needs
+  to be updated)
+- Option to customize each item individually in the “Add Multiple Downloads” page (by right-clicking on each item) (
+  #866)
+- “Download Page” and “Custom User-Agent” options are now available in the “Add Download” > "Configs" dialog
+- Ability to remove recently used save locations (#873)
+
+### Changed
+
+- Browser integration API updated; updating the browser extension is required to support new features
+
+### Improved
+
+- Updated translations
+- The download creation time is now set to when the “Add Download” dialog is opened (#846)
+
 ## 1.6.14
 
 ### Fixed
